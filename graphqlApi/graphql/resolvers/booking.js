@@ -22,7 +22,10 @@ module.exports = {
             throw new Error(error?.message || "Failed to fetch bookings");
         }
     },
-    bookEvent: async (args) => {
+    bookEvent: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error("Unauthenticated");
+        }
         try {
             const fetchedEvent = await prisma.event.findFirst({
                 where: { id: parseInt(args.eventId) }
@@ -55,7 +58,10 @@ module.exports = {
             throw new Error(error?.message || "Failed to book event");
         }
     },
-    cancelBooking: async (args) => {
+    cancelBooking: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error("Unauthenticated");
+        }
         try {
             const booking = await prisma.booking.findUnique({
                 where: { id: parseInt(args.bookingId) },

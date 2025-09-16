@@ -18,14 +18,17 @@ module.exports = {
             throw new Error(error?.message || "Failed to fetch events");
         }
     },
-    createEvent: async (args) => {
+    createEvent: async (args, req) => {
+        if (!req.isAuth) {
+            throw new Error("Unauthenticated");
+        }
         try {
             const newEvent = {
                 title: args.eventInput.title,
                 description: args.eventInput.description,
                 price: +args.eventInput.price,
                 date: new Date(args.eventInput.date),
-                creator: { connect: { id: args.eventInput.userId } },
+                creator: { connect: { id: req.userId } },
             };
             const createdEvent = await prisma.event.create({
                 data: newEvent,
