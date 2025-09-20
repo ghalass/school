@@ -8,11 +8,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import {
-  cilBell,
-  cilUser,
-  cilPowerStandby,
-} from '@coreui/icons'
+import { cilBell, cilUser, cilPowerStandby } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import { toast } from 'react-toastify'
 import avatar8 from './../../assets/images/avatars/8.jpg'
@@ -20,15 +16,15 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthContext } from '../../hooks/useAuthContext'
 
 const AppHeaderDropdown = () => {
-  const navigate = useNavigate();
-  const { dispatch } = useAuthContext();
+  const navigate = useNavigate()
+  const { dispatch, user } = useAuthContext()
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    dispatch({ type: 'LOGOUT' });
+    localStorage.removeItem('user')
+    dispatch({ type: 'LOGOUT' })
 
-    toast.success('Déconnecté avec succès.');
-    navigate('/login');
+    toast.success('Déconnecté avec succès.')
+    navigate('/login')
   }
 
   return (
@@ -46,15 +42,14 @@ const AppHeaderDropdown = () => {
           </CBadge>
         </CDropdownItem>
 
-
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
-        <CDropdownItem href="#">
+        <CDropdownItem href={`#/profile/${user.userId}`}>
           <CIcon icon={cilUser} className="me-2" />
           Profile
         </CDropdownItem>
 
         <CDropdownDivider />
-        <CDropdownItem as={'button'} onClick={handleLogout} >
+        <CDropdownItem as={'button'} onClick={handleLogout}>
           <CIcon icon={cilPowerStandby} className="me-2" />
           Se déconnecter
         </CDropdownItem>

@@ -5,9 +5,20 @@ import App from './App'
 import store from './store'
 import { AuthContextProvider } from './context/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ToastContainer, Bounce } from "react-toastify";
+import { ToastContainer, Bounce } from 'react-toastify'
 
-const queryClient = new QueryClient();
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client'
+
+import { fr } from 'yup-locales'
+import { setLocale } from 'yup'
+setLocale(fr)
+
+const queryClient = new QueryClient()
+
+const client = new ApolloClient({
+  uri: 'http://localhost:4000/',
+  cache: new InMemoryCache(),
+})
 
 createRoot(document.getElementById('root')).render(
   <AuthContextProvider>
@@ -26,8 +37,10 @@ createRoot(document.getElementById('root')).render(
         transition={Bounce}
       />
       <Provider store={store}>
-        <App />
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
       </Provider>
     </QueryClientProvider>
-  </AuthContextProvider>
+  </AuthContextProvider>,
 )

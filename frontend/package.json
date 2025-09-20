@@ -1,24 +1,18 @@
 {
   "name": "school",
   "version": "5.5.0",
-  "description": "CoreUI Free React Admin Template",
+  "description": "school",
   "homepage": ".",
-  "bugs": {
-    "url": "https://github.com/coreui/coreui-free-react-admin-template/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:coreui/coreui-free-react-admin-template.git"
-  },
   "license": "MIT",
-  "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",
+  "author": "GHALASS",
   "scripts": {
     "build": "vite build",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite"
+    "dev": "vite"
   },
   "dependencies": {
+    "@apollo/client": "^3.14.0",
     "@coreui/chartjs": "^4.1.0",
     "@coreui/coreui": "^5.4.1",
     "@coreui/icons": "^3.0.1",
@@ -33,7 +27,9 @@
     "classnames": "^2.5.1",
     "core-js": "^3.45.0",
     "date-fns": "^4.1.0",
+    "graphql": "^16.11.0",
     "js-cookie": "^3.0.5",
+    "lucide-react": "^0.544.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -41,8 +37,11 @@
     "react-router-dom": "^7.7.1",
     "react-toastify": "^11.0.5",
     "redux": "5.0.1",
+    "rxjs": "^7.8.2",
     "simplebar-react": "^3.3.2",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "yup": "^1.7.0",
+    "yup-locales": "^1.2.28"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",

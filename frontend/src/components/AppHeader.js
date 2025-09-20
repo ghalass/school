@@ -16,14 +16,7 @@ import {
   CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilAccountLogout,
-  cilContrast,
-  cilMenu,
-  cilMoon,
-  cilRoom,
-  cilSun,
-} from '@coreui/icons'
+import { cilAccountLogout, cilContrast, cilMenu, cilMoon, cilRoom, cilSun } from '@coreui/icons'
 
 import { AppHeaderDropdown } from './header/index'
 import { useAuthContext } from '../hooks/useAuthContext'
@@ -66,10 +59,7 @@ const AppHeader = () => {
             <CNavLink href="#">Settings</CNavLink>
           </CNavItem>
         </CHeaderNav>
-        <CHeaderNav className="ms-auto">
-
-        </CHeaderNav>
-
+        <CHeaderNav className="ms-auto"></CHeaderNav>
 
         <CHeaderNav>
           <li className="nav-item py-1">
@@ -119,14 +109,14 @@ const AppHeader = () => {
             <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
           </li>
 
-          {user ?
+          {user ? (
             <>
               <CNavItem>
                 <CNavLink as={'button'} className="d-flex align-items-center gap-1">
-                  <span> {`Hello, ${user.first_name} ${user.last_name}`}</span>
+                  <span> {`Hello, ${user.firstName} ${user.lastName}`}</span>
                   <span>
-                    <CBadge color="info" shape="rounded-pill" >
-                      {`${user.role}`}
+                    <CBadge color="info" shape="rounded-pill">
+                      {`${user.userType}`}
                     </CBadge>
                   </span>
                 </CNavLink>
@@ -134,7 +124,7 @@ const AppHeader = () => {
 
               <AppHeaderDropdown />
             </>
-            :
+          ) : (
             <>
               <CNavItem>
                 <CNavLink href="#/login">
@@ -142,18 +132,15 @@ const AppHeader = () => {
                 </CNavLink>
               </CNavItem>
 
-
               <CNavItem>
                 <CNavLink href="#/register">
                   <CIcon icon={cilRoom} size="lg" />
                 </CNavLink>
               </CNavItem>
             </>
-          }
+          )}
         </CHeaderNav>
-
       </CContainer>
-
     </CHeader>
   )
 }

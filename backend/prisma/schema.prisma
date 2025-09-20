@@ -1,28 +1,930 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql" // ou "mysql", "sqlite", "sqlserver"
   url      = env("DATABASE_URL")
 }
 
+// ================================
+// MODÈLES UTILISATEURS
+// ================================
+
 model User {
-  id         String       @id @default(uuid())
-  first_name String
-  last_name  String
-  email      String       @unique
-  password   String
-  role       UserRoleType @default(VISITEUR)
-  active     Boolean      @default(false)
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  address   String?
+  userType  UserType // Renommé pour éviter la confusion avec le modèle Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations principales
+  student   Student?
+  teacher   Teacher?
+  admin     Admin?
+  userRoles UserRole[]
+
+  // Relations pour createdBy/updatedBy
+  createdByUser User?  @relation("UserCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?  @relation("UserUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  usersCreated  User[] @relation("UserCreatedBy")
+  usersUpdated  User[] @relation("UserUpdatedBy")
+
+  // Relations pour les autres tables
+  studentsCreated               Student[]               @relation("StudentCreatedBy")
+  studentsUpdated               Student[]               @relation("StudentUpdatedBy")
+  teachersCreated               Teacher[]               @relation("TeacherCreatedBy")
+  teachersUpdated               Teacher[]               @relation("TeacherUpdatedBy")
+  adminsCreated                 Admin[]                 @relation("AdminCreatedBy")
+  adminsUpdated                 Admin[]                 @relation("AdminUpdatedBy")
+  specializationsCreated        Specialization[]        @relation("SpecializationCreatedBy")
+  specializationsUpdated        Specialization[]        @relation("SpecializationUpdatedBy")
+  teacherSpecializationsCreated TeacherSpecialization[] @relation("TeacherSpecializationCreatedBy")
+  teacherSpecializationsUpdated TeacherSpecialization[] @relation("TeacherSpecializationUpdatedBy")
+  academicYearsCreated          AcademicYear[]          @relation("AcademicYearCreatedBy")
+  academicYearsUpdated          AcademicYear[]          @relation("AcademicYearUpdatedBy")
+  semestersCreated              Semester[]              @relation("SemesterCreatedBy")
+  semestersUpdated              Semester[]              @relation("SemesterUpdatedBy")
+  levelsCreated                 Level[]                 @relation("LevelCreatedBy")
+  levelsUpdated                 Level[]                 @relation("LevelUpdatedBy")
+  classroomsCreated             Classroom[]             @relation("ClassroomCreatedBy")
+  classroomsUpdated             Classroom[]             @relation("ClassroomUpdatedBy")
+  subjectsCreated               Subject[]               @relation("SubjectCreatedBy")
+  subjectsUpdated               Subject[]               @relation("SubjectUpdatedBy")
+  schedulesCreated              Schedule[]              @relation("ScheduleCreatedBy")
+  schedulesUpdated              Schedule[]              @relation("ScheduleUpdatedBy")
+  gradesCreated                 Grade[]                 @relation("GradeCreatedBy")
+  gradesUpdated                 Grade[]                 @relation("GradeUpdatedBy")
+  attendancesCreated            Attendance[]            @relation("AttendanceCreatedBy")
+  attendancesUpdated            Attendance[]            @relation("AttendanceUpdatedBy")
+  enrollmentsCreated            Enrollment[]            @relation("EnrollmentCreatedBy")
+  enrollmentsUpdated            Enrollment[]            @relation("EnrollmentUpdatedBy")
+  parentsCreated                Parent[]                @relation("ParentCreatedBy")
+  parentsUpdated                Parent[]                @relation("ParentUpdatedBy")
+  documentsCreated              StudentDocument[]       @relation("StudentDocumentCreatedBy")
+  documentsUpdated              StudentDocument[]       @relation("StudentDocumentUpdatedBy")
+  eventsCreated                 Event[]                 @relation("EventCreatedBy")
+  eventsUpdated                 Event[]                 @relation("EventUpdatedBy")
+  announcementsCreated          Announcement[]          @relation("AnnouncementCreatedBy")
+  announcementsUpdated          Announcement[]          @relation("AnnouncementUpdatedBy")
+  rolesCreated                  Role[]                  @relation("RoleCreatedBy")
+  rolesUpdated                  Role[]                  @relation("RoleUpdatedBy")
+  permissionsCreated            Permission[]            @relation("PermissionCreatedBy")
+  permissionsUpdated            Permission[]            @relation("PermissionUpdatedBy")
+  notificationsCreated          Notification[]          @relation("NotificationCreatedBy")
+  notificationsUpdated          Notification[]          @relation("NotificationUpdatedBy")
+  settingsCreated               SystemSetting[]         @relation("SystemSettingCreatedBy")
+  settingsUpdated               SystemSetting[]         @relation("SystemSettingUpdatedBy")
+
+  @@map("users")
 }
 
-enum UserRoleType {
-  SUPER_ADMIN
+enum UserType {
+  STUDENT
+  TEACHER
   ADMIN
-  PROFFESSEUR
-  PARTENT
-  ELEVE
-  DIRECTEUR
-  VISITEUR
+  PARENT
+}
+
+// ================================
+// MODÈLES ÉTUDIANTS
+// ================================
+
+model Student {
+  id             String        @id @default(cuid())
+  userId         String        @unique
+  studentNumber  String        @unique
+  dateOfBirth    DateTime
+  placeOfBirth   String?
+  gender         Gender
+  nationality    String?
+  emergencyPhone String?
+  enrollmentDate DateTime      @default(now())
+  graduationDate DateTime?
+  status         StudentStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  // Relations
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdByUser User?              @relation("StudentCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?              @relation("StudentUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  classrooms    StudentClassroom[]
+  enrollments   Enrollment[]
+  grades        Grade[]
+  attendances   Attendance[]
+  parents       StudentParent[]
+  documents     StudentDocument[]
+
+  @@map("students")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum StudentStatus {
+  ACTIVE
+  SUSPENDED
+  GRADUATED
+  DROPPED_OUT
+  TRANSFERRED
+}
+
+// ================================
+// MODÈLES ENSEIGNANTS
+// ================================
+
+model Teacher {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  teacherNumber String   @unique
+  degree        String?
+  experience    Int? // années d'expérience
+  hireDate      DateTime // Doit être saisie manuellement
+  salary        Decimal? @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String?
+  updatedBy     String?
+
+  // Relations
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdByUser   User?                   @relation("TeacherCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser   User?                   @relation("TeacherUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  specializations TeacherSpecialization[] // Relations avec les spécialisations
+  subjects        TeacherSubject[]
+  classrooms      Classroom[]
+  schedules       Schedule[]
+  grades          Grade[]
+  attendances     Attendance[]
+
+  @@map("teachers")
+}
+
+// ================================
+// MODÈLE SPÉCIALISATIONS
+// ================================
+
+model Specialization {
+  id          String   @id @default(cuid())
+  name        String   @unique // ex: "Mathématiques", "Physique", "Informatique"
+  code        String   @unique // ex: "MATH", "PHYS", "INFO"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  createdByUser User?                   @relation("SpecializationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?                   @relation("SpecializationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  teachers      TeacherSpecialization[]
+
+  @@map("specializations")
+}
+
+model TeacherSpecialization {
+  id                 String   @id @default(cuid())
+  teacherId          String
+  specializationId   String
+  isPrimary          Boolean  @default(false) // spécialisation principale
+  yearsExperience    Int? // années d'expérience dans cette spécialisation
+  certificationLevel String? // niveau de certification
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  createdBy          String?
+  updatedBy          String?
+
+  // Relations
+  teacher        Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  specialization Specialization @relation(fields: [specializationId], references: [id], onDelete: Cascade)
+  createdByUser  User?          @relation("TeacherSpecializationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser  User?          @relation("TeacherSpecializationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([teacherId, specializationId])
+  @@map("teacher_specializations")
+}
+
+// ================================
+// NOTIFICATIONS
+// ================================
+
+model Notification {
+  id            String               @id @default(cuid())
+  title         String
+  message       String
+  type          NotificationType
+  priority      NotificationPriority @default(NORMAL)
+  recipientType String // USER, ROLE, ALL
+  recipientId   String? // ID du destinataire spécifique
+  senderId      String? // ID de l'expéditeur
+  isRead        Boolean              @default(false)
+  scheduledFor  DateTime? // pour les notifications programmées
+  sentAt        DateTime?
+  readAt        DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  expiresAt     DateTime?
+  createdBy     String?
+  updatedBy     String?
+
+  // Données supplémentaires pour les notifications riches
+  metadata  Json?
+  actionUrl String? // URL vers une action spécifique
+
+  // Relations
+  createdByUser User? @relation("NotificationCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("NotificationUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, isRead])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  SYSTEM // Notifications système
+  ACADEMIC // Notifications académiques
+  GRADE // Nouvelles notes
+  ATTENDANCE // Absences
+  PAYMENT // Paiements
+  EVENT // Événements
+  ANNOUNCEMENT // Annonces
+  DISCIPLINARY // Discipline
+  SCHEDULE_CHANGE // Changements d'emploi du temps
+  ENROLLMENT // Inscriptions
+  DOCUMENT // Documents
+  REMINDER // Rappels
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// ================================
+// PARAMÈTRES SYSTÈME
+// ================================
+
+model SystemSetting {
+  id          String      @id @default(cuid())
+  key         String      @unique
+  value       String
+  type        SettingType
+  category    String? // pour regrouper les paramètres
+  description String?
+  isPublic    Boolean     @default(false) // si le paramètre est visible publiquement
+  updatedBy   String? // ID de l'utilisateur qui a mis à jour
+  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime    @default(now())
+  createdBy   String?
+
+  // Relations
+  createdByUser User? @relation("SystemSettingCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("SystemSettingUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+  DATE
+  EMAIL
+  URL
+}
+
+// ================================
+// MODÈLES ADMINISTRATEURS (mis à jour)
+// ================================
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // SUPER_ADMIN, ACADEMIC_DIRECTOR, TEACHER_COORDINATOR, etc.
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  createdByUser   User?            @relation("RoleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser   User?            @relation("RoleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  resource    PermissionResource
+  action      PermissionAction
+  description String?
+  category    String? // pour regrouper les permissions
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  createdByUser   User?            @relation("PermissionCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser   User?            @relation("PermissionUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  conditions   Json? // conditions spéciales (ex: seulement ses propres classes)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  Admin      Admin?     @relation(fields: [adminId], references: [id])
+  adminId    String?
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id         String    @id @default(cuid())
+  userId     String
+  roleId     String
+  isActive   Boolean   @default(true)
+  assignedAt DateTime  @default(now())
+  assignedBy String? // ID de l'utilisateur qui a assigné ce rôle
+  expiresAt  DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// Énumérations pour les permissions
+enum PermissionResource {
+  // Gestion des utilisateurs
+  USERS
+  STUDENTS
+  TEACHERS
+  ADMINS
+  PARENTS
+
+  // Structure académique
+  ACADEMIC_YEARS
+  SEMESTERS
+  LEVELS
+  CLASSROOMS
+  SUBJECTS
+
+  // Enseignement
+  SCHEDULES
+  GRADES
+  ATTENDANCE
+  ENROLLMENTS
+
+  // Communication
+  ANNOUNCEMENTS
+  EVENTS
+  NOTIFICATIONS
+
+  // Documents et rapports
+  DOCUMENTS
+  REPORTS
+  TRANSCRIPTS
+
+  // Finances
+  PAYMENTS
+  FEES
+  FINANCIAL_REPORTS
+
+  // Système
+  SETTINGS
+  PERMISSIONS
+  ROLES
+  AUDIT_LOGS
+  BACKUPS
+}
+
+enum PermissionAction {
+  CREATE // Créer
+  READ // Lire/Consulter
+  UPDATE // Modifier
+  DELETE // Supprimer
+  APPROVE // Approuver
+  REJECT // Rejeter
+  PUBLISH // Publier
+  ARCHIVE // Archiver
+  EXPORT // Exporter
+  IMPORT // Importer
+  ASSIGN // Assigner
+  UNASSIGN // Désassigner
+}
+
+// ================================
+// AUDIT ET LOGS
+// ================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String // CREATE_STUDENT, UPDATE_GRADE, DELETE_USER, etc.
+  resource   String // students, grades, users, etc.
+  resourceId String? // ID de la ressource concernée
+  oldValues  Json? // anciennes valeurs (pour les mises à jour)
+  newValues  Json? // nouvelles valeurs
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model Admin {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  position   String
+  department String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?
+  updatedBy  String?
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdByUser   User?            @relation("AdminCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser   User?            @relation("AdminUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  rolePermissions RolePermission[]
+
+  @@map("admins")
+}
+
+// ================================
+// MODÈLES ACADÉMIQUES
+// ================================
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  name      String   @unique // ex: "2023-2024"
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations
+  createdByUser User?        @relation("AcademicYearCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?        @relation("AcademicYearUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  semesters     Semester[]
+  classrooms    Classroom[]
+  enrollments   Enrollment[]
+
+  @@map("academic_years")
+}
+
+model Semester {
+  id             String   @id @default(cuid())
+  name           String // ex: "Semestre 1", "Trimestre 2"
+  academicYearId String
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  // Relations
+  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  createdByUser User?        @relation("SemesterCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?        @relation("SemesterUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  schedules     Schedule[]
+  grades        Grade[]
+
+  @@map("semesters")
+}
+
+model Level {
+  id          String   @id @default(cuid())
+  name        String   @unique // ex: "6ème", "5ème", "Terminale"
+  description String?
+  order       Int      @unique // pour l'ordre des niveaux
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  createdByUser User?       @relation("LevelCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?       @relation("LevelUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  classrooms    Classroom[]
+
+  @@map("levels")
+}
+
+model Classroom {
+  id             String   @id @default(cuid())
+  name           String // ex: "6ème A", "Terminale S1"
+  capacity       Int?
+  levelId        String
+  academicYearId String
+  teacherId      String? // Professeur principal
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  // Relations
+  level         Level              @relation(fields: [levelId], references: [id])
+  academicYear  AcademicYear       @relation(fields: [academicYearId], references: [id])
+  teacher       Teacher?           @relation(fields: [teacherId], references: [id])
+  createdByUser User?              @relation("ClassroomCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?              @relation("ClassroomUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  students      StudentClassroom[]
+  schedules     Schedule[]
+  enrollments   Enrollment[]
+
+  @@unique([name, academicYearId])
+  @@map("classrooms")
+}
+
+model StudentClassroom {
+  id          String   @id @default(cuid())
+  studentId   String
+  classroomId String
+  enrolledAt  DateTime @default(now())
+  isActive    Boolean  @default(true)
+
+  // Relations
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classroomId])
+  @@map("student_classrooms")
+}
+
+// ================================
+// MODÈLES MATIÈRES ET COURS
+// ================================
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  coefficient Int      @default(1) // coefficient pour les notes
+  color       String? // couleur pour l'affichage
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  createdByUser User?            @relation("SubjectCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?            @relation("SubjectUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  teachers      TeacherSubject[]
+  schedules     Schedule[]
+  grades        Grade[]
+  enrollments   Enrollment[]
+
+  @@map("subjects")
+}
+
+model TeacherSubject {
+  id        String  @id @default(cuid())
+  teacherId String
+  subjectId String
+  isActive  Boolean @default(true)
+
+  // Relations
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@map("teacher_subjects")
+}
+
+// ================================
+// EMPLOI DU TEMPS
+// ================================
+
+model Schedule {
+  id          String    @id @default(cuid())
+  classroomId String
+  subjectId   String
+  teacherId   String
+  semesterId  String
+  dayOfWeek   DayOfWeek
+  startTime   String // format HH:MM
+  endTime     String // format HH:MM
+  room        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  subject       Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher       Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  semester      Semester  @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  createdByUser User?     @relation("ScheduleCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?     @relation("ScheduleUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("schedules")
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ================================
+// ÉVALUATIONS ET NOTES
+// ================================
+
+model Grade {
+  id          String    @id @default(cuid())
+  studentId   String
+  subjectId   String
+  teacherId   String
+  semesterId  String
+  gradeType   GradeType
+  value       Decimal   @db.Decimal(5, 2) // note sur 20 par exemple
+  maxValue    Decimal   @default(20) @db.Decimal(5, 2)
+  coefficient Int       @default(1)
+  examDate    DateTime
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  // Relations
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher       Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  semester      Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  createdByUser User?    @relation("GradeCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?    @relation("GradeUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("grades")
+}
+
+enum GradeType {
+  EXAM
+  QUIZ
+  HOMEWORK
+  PROJECT
+  PARTICIPATION
+  FINAL_EXAM
+}
+
+// ================================
+// PRÉSENCES
+// ================================
+
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  teacherId String?
+  date      DateTime
+  status    AttendanceStatus
+  reason    String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  // Relations
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher       Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  createdByUser User?    @relation("AttendanceCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?    @relation("AttendanceUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, date])
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+// ================================
+// INSCRIPTIONS
+// ================================
+
+model Enrollment {
+  id             String           @id @default(cuid())
+  studentId      String
+  classroomId    String
+  academicYearId String
+  subjectId      String
+  enrollmentDate DateTime         @default(now())
+  status         EnrollmentStatus @default(ACTIVE)
+  tuitionFee     Decimal?         @db.Decimal(10, 2)
+  paymentStatus  PaymentStatus    @default(PENDING)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  // Relations
+  student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom     Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  subject       Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdByUser User?        @relation("EnrollmentCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?        @relation("EnrollmentUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, classroomId, subjectId, academicYearId])
+  @@map("enrollments")
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+// ================================
+// PARENTS
+// ================================
+
+model Parent {
+  id           String   @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String   @unique
+  phone        String
+  address      String?
+  occupation   String?
+  relationship String // père, mère, tuteur, etc.
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?
+  updatedBy    String?
+
+  // Relations
+  createdByUser User?           @relation("ParentCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?           @relation("ParentUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  students      StudentParent[]
+
+  @@map("parents")
+}
+
+model StudentParent {
+  id        String  @id @default(cuid())
+  studentId String
+  parentId  String
+  isPrimary Boolean @default(false) // contact principal
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, parentId])
+  @@map("student_parents")
+}
+
+// ================================
+// DOCUMENTS
+// ================================
+
+model StudentDocument {
+  id         String       @id @default(cuid())
+  studentId  String
+  name       String
+  type       DocumentType
+  filePath   String
+  fileSize   Int?
+  mimeType   String?
+  uploadedAt DateTime     @default(now())
+  uploadedBy String? // ID de l'utilisateur qui a uploadé
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  createdBy  String?
+  updatedBy  String?
+
+  // Relations
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdByUser User?   @relation("StudentDocumentCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User?   @relation("StudentDocumentUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("student_documents")
+}
+
+enum DocumentType {
+  BIRTH_CERTIFICATE
+  PASSPORT
+  PHOTO
+  MEDICAL_RECORD
+  TRANSCRIPT
+  DIPLOMA
+  OTHER
+}
+
+// ================================
+// ÉVÉNEMENTS ET ANNONCES
+// ================================
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  isPublic    Boolean   @default(true)
+  createdBy   String? // ID de l'utilisateur créateur
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+
+  // Relations
+  createdByUser User? @relation("EventCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("EventUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("events")
+}
+
+model Announcement {
+  id             String               @id @default(cuid())
+  title          String
+  content        String
+  priority       AnnouncementPriority @default(NORMAL)
+  targetAudience String[] // ["STUDENTS", "TEACHERS", "PARENTS"]
+  isPublished    Boolean              @default(false)
+  publishedAt    DateTime?
+  expiresAt      DateTime?
+  createdBy      String? // ID de l'utilisateur créateur
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  updatedBy      String?
+
+  // Relations
+  createdByUser User? @relation("AnnouncementCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  updatedByUser User? @relation("AnnouncementUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("announcements")
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
